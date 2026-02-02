@@ -17,6 +17,7 @@ use App\Http\Controllers\WeaponAttachmentController;
 use App\Http\Controllers\WeaponController;
 use App\Http\Controllers\WeaponPaymentController;
 use App\Http\Controllers\WeaponPrintController;
+use App\Http\Controllers\ShekariWeaponController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 
@@ -138,6 +139,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/unused-weapons-list/{organization_id}', [WeaponController::class, 'unused_weapons'])->name('unused-weapons-list');
 
         Route::get('/report', [ReportController::class, 'index'])->name('report');
+
+        // shekari weapons
+        Route::get('/shekari-weapons', [ShekariWeaponController::class, 'index'])->name('shekari-weapons');
+        Route::post('/shekari-weapon-store', [ShekariWeaponController::class, 'store'])->name('shekari-weapon-store');
+        // Route::post('/organization-store', [OrganizationController::class, 'store'])->name('organization-store');
+        // Route::get('/shops', [OrganizationController::class, 'shops'])->name('shops');
     });
 
     Route::get('/show-weapon-to-print', [WeaponPrintController::class, 'index'])->name('show-weapon-to-print');

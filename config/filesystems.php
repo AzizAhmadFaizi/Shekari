@@ -125,6 +125,12 @@ return [
             'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
         ],
+        'shekari_weapon_files' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/shekari_weapon_files'),
+            'url' => env('APP_URL') . '/storage',
+            'visibility' => 'public',
+        ],
 
         's3' => [
             'driver' => 's3',
