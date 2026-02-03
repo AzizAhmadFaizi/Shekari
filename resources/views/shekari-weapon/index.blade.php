@@ -19,11 +19,11 @@
                 <thead class="table-dark">
                     <tr>
                         <th>شماره</th>
-                        <th>اسم دری</th>
-                        {{-- <th>اسم انگلیسی</th> --}}
-                        <th>ثبت</th>
-                        <th>لوگو</th>
-                        <th>حالت</th>
+                        <th>اسم شرکت</th>
+                        <th>تاریخ وارده</th>
+                        <th>تاریخ مکتوب</th>
+                        <th>نمبر مکتوب</th>
+                        <th>تعداد</th>
                         <th>عملیات</th>
                     </tr>
                 </thead>
@@ -36,17 +36,18 @@
     </div>
 
     {{-- create modal --}}
-    <div class="modal modal-slide-in fade pop_up_modal" id="modals-slide-in">
-        <div class="modal-dialog sidebar-xl">
+    <div class="modal fade pop_up_modal" id="modals-slide-in" {{-- data-bs-backdrop="static" --}}>
+        <div class="modal-dialog modal-lg">
             <form action="{{ route('shekari-weapon-store') }}" id="shekari_weapon_store_form" method="POST"
                 class="add-new-record modal-content pt-0">
                 @csrf
+                <input type="hidden" class="form-control" name="shekari_weapon_id" id="shekari_weapon_id" />
                 <div class="modal-header mb-1">
-                    <h5 class="modal-title" id="presidentModalLabel">ثبت تفنگ شکاری</h5>
+                    <h3 class="modal-title" id="shekariWeaponModalLabel"></h3>
                 </div>
                 <div class="modal-body flex-grow-1">
                     <div class="row">
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">شرکت ها</label>
                             <select name="organization_id" id="organization_id" pro-type="current"
                                 class="form-control select2 province btn-form-block">
@@ -57,65 +58,66 @@
                             </select>
                             <div class="invalid-feedback organization_id_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">تاریخ وارده</label>
                             <input type="text" class="form-control farsi-date-picker" id="hijri_warada_date"
                                 name="hijri_warada_date" autocomplete="off" />
                             <div class="invalid-feedback hijri_warada_date_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">تاریخ مکتوب</label>
                             <input type="text" class="form-control farsi-date-picker" id="maktoob_date"
                                 name="maktoob_date" autocomplete="off" />
                             <div class="invalid-feedback maktoob_date_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">نمبر مکتوب</label>
                             <input type="number" class="form-control" id="maktoob_number" name="maktoob_number"
                                 autocomplete="off" />
                             <div class="invalid-feedback maktoob_number_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">نمبر انوایس</label>
                             <input type="number" class="form-control" id="invoice_number" name="invoice_number"
                                 autocomplete="off" />
                             <div class="invalid-feedback invoice_number_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">نمبر ایروبل</label>
                             <input type="number" class="form-control" id="airo_bill_number" name="airo_bill_number"
                                 autocomplete="off" />
                             <div class="invalid-feedback airo_bill_number_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">راه وارداتی (بندر)</label>
                             <input type="text" class="form-control" id="warada_way" name="warada_way"
                                 autocomplete="off" />
                             <div class="invalid-feedback warada_way_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">تعرفه</label>
                             <input type="text" class="form-control" id="tarofa" name="tarofa" autocomplete="off" />
                             <div class="invalid-feedback tarofa_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">نوع</label>
                             <input type="text" class="form-control" id="type" name="type" autocomplete="off" />
                             <div class="invalid-feedback type_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">تعداد</label>
-                            <input type="number" class="form-control" id="quantity" name="quantity" autocomplete="off" />
+                            <input type="number" class="form-control" id="quantity" name="quantity"
+                                autocomplete="off" />
                             <div class="invalid-feedback quantity_error"></div>
                         </div>
-                        <div class="mb-1 col-sm-12 col-md-3">
+                        <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">فیس</label>
                             <input type="number" class="form-control" id="fess" name="fess"
                                 autocomplete="off" />
                             <div class="invalid-feedback fess_error"></div>
                         </div>
                         <div class="row">
-                            <div class="col-md-4 col-sm-12">
+                            <div class="col-md-6 col-sm-12">
                                 <div class="col-sm-12 d-flex mb-2">
                                     <button type="button" id="addSerialBtn" class="btn btn-success btn-sm">
                                         <span class="fa fa-plus"></span> اضافه شماره سریال
@@ -149,16 +151,19 @@
     {{-- end create modal --}}
 @endsection
 @section('scripts')
-    @include('organization.general_scripts')
-    @include('organization.dari-datepicker')
     @include('organization.blockui')
+    {{-- @include('organization.general_scripts') --}}
+    @include('organization.dari-datepicker')
     <script>
         // ================================
         //   show model
         // ================================
         $('.show_modal').click(function() {
+            $('#shekariWeaponModalLabel').text('ثبت تفنگ شکاری');
             $('.pop_up_modal').modal('show');
             $('#shekari_weapon_store_form')[0].reset();
+            // clear dynamic serial numbers  ⭐ IMPORTANT
+            $('#serialNumbersContainer').empty();
         });
 
         // ======================================================
@@ -190,7 +195,7 @@
             input.type = 'text';
             input.name = 'serial_numbers[]'; // <-- array format
             input.classList.add('form-control', 'me-2');
-            input.placeholder = 'Enter Serial Number';
+            input.placeholder = 'شماره سریال';
 
             // Delete button
             const delBtn = document.createElement('button');
@@ -236,6 +241,7 @@
                             submit_btn = false;
                             success_msg($('input[name=president_id]').val() == 0 ? "موفقانه ثبت شد" :
                                 "موفقانه تغییر نمود");
+                            $('.datatables-ajax').DataTable().ajax.reload();
                             $('.pop_up_modal').modal('hide');
                         } else {
                             $('.form-block').unblock();
@@ -258,5 +264,120 @@
                 });
             }
         });
+
+        // ======================================================
+        //  ajax-datatable
+        // ======================================================
+
+        $(document).ready(function() {
+            $('.datatables-ajax').dataTable({
+                "bInfo": false,
+                "lengthChange": false,
+                processing: true,
+                serverSide: true,
+                ajax: "{{ route('shekari-weapons') }}",
+
+                language: {
+                    paginate: {
+                        previous: '&nbsp;',
+                        next: '&nbsp;'
+                    },
+                    "sSearch": "جستجو",
+                    "sEmptyTable": "جدول خالی است",
+                    "zeroRecords": "دیتا موجود نیست",
+                    "processing": "در حال پروسس",
+                },
+                columns: [{
+                        "data": 'DT_RowIndex'
+                    },
+                    {
+                        "data": 'organization.name_dr'
+                    },
+                    {
+                        "data": 'hijri_warada_date'
+                    },
+                    {
+                        "data": 'maktoob_date'
+                    },
+                    {
+                        "data": 'maktoob_number'
+                    },
+                    {
+                        "data": 'quantity'
+                    },
+                    {
+                        "data": 'action'
+                    }
+
+                ]
+            });
+        });
+
+        // ======================================================
+        //  edit button click
+        // ======================================================
+
+        $(document).on('click', '.edit_btn', function() {
+            let btn = $(this);
+
+            $('#shekariWeaponModalLabel').text('ویرایش تفنگ شکاری');
+
+            // Basic fields
+            $('#shekari_weapon_id').val(btn.data('id'));
+            $('#organization_id').val(btn.data('organization')).trigger('change');
+            $('#hijri_warada_date').val(btn.data('hijri'));
+            $('#maktoob_date').val(btn.data('maktoobdate'));
+            $('#maktoob_number').val(btn.data('maktoobnumber'));
+            $('#invoice_number').val(btn.data('invoice'));
+            $('#airo_bill_number').val(btn.data('airo'));
+            $('#warada_way').val(btn.data('way'));
+            $('#tarofa').val(btn.data('tarofa'));
+            $('#type').val(btn.data('type'));
+            $('#quantity').val(btn.data('quantity'));
+            $('#fess').val(btn.data('fess'));
+
+            // Attachment
+            if (btn.data('attachment')) {
+                let fileHtml = `<a href="${btn.data('attachment')}" target="_blank">مشاهده فایل فعلی</a>`;
+                $('input[name=attachment]').next('.current-attachment').remove(); // remove previous if any
+                $('input[name=attachment]').after(`<div class="current-attachment mt-1">${fileHtml}</div>`);
+            } else {
+                $('input[name=attachment]').next('.current-attachment').remove();
+            }
+
+            // Serial numbers
+            const serialContainer = $('#serialNumbersContainer');
+            serialContainer.empty();
+            let serials = btn.data('serials');
+            if (typeof serials === "string") {
+                serials = JSON.parse(serials); // parse JSON string
+            }
+
+            // Add existing serials with delete button
+            if (serials.length > 0) {
+                serials.forEach((s, index) => {
+                    const div = $('<div class="mb-1 d-flex align-items-center"></div>');
+                    const input = $(
+                        `<input type="text" name="serial_numbers[]" class="form-control me-2" value="${s}" placeholder="شماره سریال ${index+1}">`
+                    );
+                    const delBtn = $('<button type="button" class="btn btn-danger btn-sm">حذف</button>');
+
+                    delBtn.on('click', function() {
+                        div.remove();
+                    });
+
+                    div.append(input).append(delBtn);
+                    serialContainer.append(div);
+                });
+            }
+
+            // Show modal
+            $('.pop_up_modal').modal('show');
+        });
+
+        // ======================================================
+        //  show button click
+        // ======================================================
+        
     </script>
 @endsection

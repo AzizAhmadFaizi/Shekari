@@ -13,17 +13,120 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
+use App\Models\Weapon;
+use App\Models\License;
+use App\Models\Vehicle;
+use App\Models\Contract;
+use App\Models\District;
+use App\Models\Employee;
+use App\Models\President;
+use App\Models\VicePresident;
+
+
 class ShekariWeaponController extends Controller
 {
-    protected function index(Request $request)
+   protected function index(Request $request)
     {
-        // dd('helloooooooooo');
-          $data['organizations'] = Organization::select('id', 'name_dr')->get();
-        return view('shekari-weapon.index', $data);
+
+        $data['organizations'] = Organization::where('type', 1)
+        ->select('id', 'name_dr')
+        ->get();
+
+        if ($request->ajax()){
+
+            $data = ShekariWeapon::with([
+                    'organization',
+                    'serials',
+                    'createdBy'
+                ])
+                ->whereHas('organization', function ($query) {
+                    $query->where('type', 1); // Only organizations with type = 1
+                })
+                ->orderBy('id', 'desc')
+                ->get();
+
+               return DataTables::of($data)
+               ->addIndexColumn()
+
+                ->addColumn('name', function ($row) {
+                    return $row->organization->name_dr ?? '-';
+                })
+                ->addColumn('hijri_warada_date', function ($row) {
+                    return $row->hijri_warada_date ?? '-';
+                })
+                ->addColumn('maktoob_date', function ($row) {
+                    return $row->maktoob_date ?? '-';
+                })
+                ->addColumn('maktoob_number', function ($row) {
+                    return $row->maktoob_number ?? '-';
+                })
+                ->addColumn('quantity', function ($row) {
+                    return $row->quantity ?? 0;
+                })
+                ->addColumn('action', function ($row) {
+                $serials = $row->serials->pluck('serial_number')->toArray(); // array of serials
+                $serials_json = htmlspecialchars(json_encode($serials), ENT_QUOTES, 'UTF-8'); // safely encode
+                $attachment = $row->attachment ? asset('storage/shekari_weapon_files/' . $row->attachment) : '';
+                $btn = '';
+                $btn .=  "<a href='#'
+                    class='edit_btn me-1'
+                    style='cursor:pointer'
+                    data-id='{$row->id}'
+                    data-organization='{$row->organization->id}'
+                    data-hijri='{$row->hijri_warada_date}'
+                    data-maktoobdate='{$row->maktoob_date}'
+                    data-maktoobnumber='{$row->maktoob_number}'
+                    data-invoice='{$row->invoice_number}'
+                    data-airo='{$row->airo_bill_number}'
+                    data-way='{$row->warada_way}'
+                    data-tarofa='{$row->tarofa}'
+                    data-type='{$row->type}'
+                    data-quantity='{$row->quantity}'
+                    data-fess='{$row->fess}'
+                    data-attachment='{$attachment}'
+                    data-serials='{$serials_json}'
+                >
+                    <span class='btn btn-outline-primary btn-sm fa fa-edit'></span>
+                </a>";
+                $btn .=  "<a href='#'
+                    class='edit_btn me-1'
+                    style='cursor:pointer'
+                    data-id='{$row->id}'
+                    data-organization='{$row->organization->id}'
+                    data-hijri='{$row->hijri_warada_date}'
+                    data-maktoobdate='{$row->maktoob_date}'
+                    data-maktoobnumber='{$row->maktoob_number}'
+                    data-invoice='{$row->invoice_number}'
+                    data-airo='{$row->airo_bill_number}'
+                    data-way='{$row->warada_way}'
+                    data-tarofa='{$row->tarofa}'
+                    data-type='{$row->type}'
+                    data-quantity='{$row->quantity}'
+                    data-fess='{$row->fess}'
+                    data-attachment='{$attachment}'
+                    data-serials='{$serials_json}'
+                >
+                    <span class='btn btn-outline-primary btn-sm fa fa-edit'></span>
+                </a>"
+
+                ;
+
+                return $btn;
+            })
+
+                ->rawColumns(['action'])
+
+                ->make(true);
+        }
+
+
+        return view('shekari-weapon.index',   $data);
     }
+
 
    protected function store(Request $request)
 {
+    // dd($request->all());
     $validator = Validator::make(
         $request->all(),
         [
@@ -52,18 +155,38 @@ class ShekariWeaponController extends Controller
         // ==============================
         // upload attachment
         // ==============================
-        $attach = null;
-        if ($request->has('attachment')) {
-            $attach = Storage::disk('shekari_weapon_files')
-                ->put(date('Y') . '/' . date('m'), $request->file('attachment'));
+        // $attach = null;
+        // if ($request->has('attachment')) {
+        //     $attach = Storage::disk('shekari_weapon_files')
+        //         ->put(date('Y') . '/' . date('m'), $request->file('attachment'));
+        // }
+
+        // ==============================
+        // upload attachment (EDIT SAFE)
+        // ==============================
+        $request->shekari_weapon_id == 0 ?  $shekari_weapon = new ShekariWeapon() : $shekari_weapon = ShekariWeapon::findOrFail($request->shekari_weapon_id);
+
+        $attach = $shekari_weapon->attachment ?? null; // keep old by default
+
+        if ($request->hasFile('attachment')) {
+
+            // delete old file if exists
+            if ($shekari_weapon->attachment &&
+                Storage::disk('shekari_weapon_files')->exists($shekari_weapon->attachment)) {
+
+                Storage::disk('shekari_weapon_files')->delete($shekari_weapon->attachment);
+            }
+
+            // upload new file
+            $attach = Storage::disk('shekari_weapon_files')->put(
+                date('Y') . '/' . date('m'),
+                $request->file('attachment')
+            );
         }
-
-
 
         // ==============================
         // create shekari_weapon
         // ==============================
-        $shekari_weapon = new ShekariWeapon();
 
         $shekari_weapon->organization_id = $request->organization_id;
         $shekari_weapon->hijri_warada_date = $request->hijri_warada_date;
@@ -81,12 +204,22 @@ class ShekariWeaponController extends Controller
         $shekari_weapon->created_by = auth()->id();
         $shekari_weapon->save();
 
-        // =============================================================
-        // create  shekari_weapon_serial_numbers data comes in array
+       // =============================================================
+        // handle serial numbers (ALWAYS SAFE)
         // =============================================================
 
-        if ($request->filled('serial_numbers')) {
+        // always delete old serials
+        DB::table('shekari_weapon_serial_numbers')
+            ->where('shekari_weapon_id', $shekari_weapon->id)
+            ->delete();
+
+        // insert only if exists
+        if ($request->has('serial_numbers') && is_array($request->serial_numbers)) {
+
             foreach ($request->serial_numbers as $serial) {
+
+                if(trim($serial) == '') continue; // skip empty rows
+
                 DB::table('shekari_weapon_serial_numbers')->insert([
                     'shekari_weapon_id' => $shekari_weapon->id,
                     'serial_number'     => $serial,
@@ -95,6 +228,7 @@ class ShekariWeaponController extends Controller
                 ]);
             }
         }
+
         DB::commit();
         return true;
 
