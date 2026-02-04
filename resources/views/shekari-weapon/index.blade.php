@@ -13,8 +13,28 @@
         @endif
     </div>
     <div class="card m-1">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>شرکت ها</label>
+                    <select id="search_organization_id" class="form-control">
+                        <option value="">شرکت را انتخاب نمایید</option>
+                        @foreach ($organizations as $item)
+                            <option value="{{ $item->id }}">{{ $item->name_dr }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label>شماره سریال</label>
+                    <input type="text" id="search_serial_number" class="form-control" placeholder="شماره سریال">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary mt-2 remove_search_btn" data-route="shekari-weapons">
+                        <span data-feather='refresh-cw'></span> پاک کردن</button>
+                </div>
+            </div>
+        </div>
         <div class="table-responsive">
-
             <table class="datatables-ajax table">
                 <thead class="table-dark">
                     <tr>
@@ -24,6 +44,7 @@
                         <th>تاریخ مکتوب</th>
                         <th>نمبر مکتوب</th>
                         <th>تعداد</th>
+                        <th>عواید</th>
                         <th>عملیات</th>
                     </tr>
                 </thead>
@@ -96,12 +117,14 @@
                         </div>
                         <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">تعرفه</label>
-                            <input type="text" class="form-control" id="tarofa" name="tarofa" autocomplete="off" />
+                            <input type="text" class="form-control" id="tarofa" name="tarofa"
+                                autocomplete="off" />
                             <div class="invalid-feedback tarofa_error"></div>
                         </div>
                         <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">نوع</label>
-                            <input type="text" class="form-control" id="type" name="type" autocomplete="off" />
+                            <input type="text" class="form-control" id="type" name="type"
+                                autocomplete="off" />
                             <div class="invalid-feedback type_error"></div>
                         </div>
                         <div class="mb-1 col-sm-12 col-md-4">
@@ -152,18 +175,21 @@
 @endsection
 @section('scripts')
     @include('organization.blockui')
-    {{-- @include('organization.general_scripts') --}}
     @include('organization.dari-datepicker')
+
     <script>
         // ================================
         //   show model
         // ================================
         $('.show_modal').click(function() {
             $('#shekariWeaponModalLabel').text('ثبت تفنگ شکاری');
-            $('.pop_up_modal').modal('show');
             $('#shekari_weapon_store_form')[0].reset();
-            // clear dynamic serial numbers  ⭐ IMPORTANT
             $('#serialNumbersContainer').empty();
+            $('input').prop('disabled', false);
+            $('select').prop('disabled', false);
+            $('#addSerialBtn').prop('disabled', false);
+            $('.delete_serial_button').prop('disabled', false);
+            $('.pop_up_modal').modal('show');
         });
 
         // ======================================================
@@ -268,15 +294,24 @@
         // ======================================================
         //  ajax-datatable
         // ======================================================
+        $(function() {
 
-        $(document).ready(function() {
-            $('.datatables-ajax').dataTable({
-                "bInfo": false,
-                "lengthChange": false,
+            let table = $('.datatables-ajax').DataTable({
+
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('shekari-weapons') }}",
+                searching: false,
+                lengthChange: false,
+                bInfo: false,
 
+                ajax: {
+                    url: "{{ route('shekari-weapons') }}",
+                    type: "GET",
+                    data: function(d) {
+                        d.search_organization_id = $('#search_organization_id').val();
+                        d.search_serial_number = $('#search_serial_number').val();
+                    }
+                },
                 language: {
                     paginate: {
                         previous: '&nbsp;',
@@ -287,41 +322,65 @@
                     "zeroRecords": "دیتا موجود نیست",
                     "processing": "در حال پروسس",
                 },
-                columns: [{
-                        "data": 'DT_RowIndex'
-                    },
-                    {
-                        "data": 'organization.name_dr'
-                    },
-                    {
-                        "data": 'hijri_warada_date'
-                    },
-                    {
-                        "data": 'maktoob_date'
-                    },
-                    {
-                        "data": 'maktoob_number'
-                    },
-                    {
-                        "data": 'quantity'
-                    },
-                    {
-                        "data": 'action'
-                    }
 
+                columns: [{
+                        data: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'name'
+                    },
+                    {
+                        data: 'hijri_warada_date'
+                    },
+                    {
+                        data: 'maktoob_date'
+                    },
+                    {
+                        data: 'maktoob_number'
+                    },
+                    {
+                        data: 'quantity'
+                    },
+                    {
+                        data: 'revenue'
+                    },
+                    {
+                        data: 'action',
+                        orderable: false,
+                        searchable: false
+                    }
                 ]
             });
+            /*
+            |------------------------------------------
+            | Reload when filters change
+            |------------------------------------------
+            */
+            $('#search_organization_id').on('change', function() {
+                table.draw();
+            });
+            $('#search_serial_number').on('keyup', function() {
+                table.draw();
+            });
+
         });
+
 
         // ======================================================
         //  edit button click
         // ======================================================
 
         $(document).on('click', '.edit_btn', function() {
+
+            $('input').prop('disabled', false);
+            $('select').prop('disabled', false);
+            $('#addSerialBtn').prop('disabled', false);
+            $('.delete_serial_button').prop('disabled', false);
+
             let btn = $(this);
-
             $('#shekariWeaponModalLabel').text('ویرایش تفنگ شکاری');
-
             // Basic fields
             $('#shekari_weapon_id').val(btn.data('id'));
             $('#organization_id').val(btn.data('organization')).trigger('change');
@@ -338,7 +397,8 @@
 
             // Attachment
             if (btn.data('attachment')) {
-                let fileHtml = `<a href="${btn.data('attachment')}" target="_blank">مشاهده فایل فعلی</a>`;
+                let fileHtml =
+                    `<a class="btn btn-sm btn-info" href="${btn.data('attachment')}" target="_blank">مشاهده فایل فعلی</a>`;
                 $('input[name=attachment]').next('.current-attachment').remove(); // remove previous if any
                 $('input[name=attachment]').after(`<div class="current-attachment mt-1">${fileHtml}</div>`);
             } else {
@@ -378,6 +438,111 @@
         // ======================================================
         //  show button click
         // ======================================================
-        
+
+        $(document).on('click', '.show_btn', function() {
+            let btn = $(this);
+
+            $('#shekariWeaponModalLabel').text('نمایش تفنگ شکاری');
+
+            // Basic fields
+            $('#shekari_weapon_id').val(btn.data('id'));
+            $('#organization_id').val(btn.data('organization')).trigger('change');
+            $('#hijri_warada_date').val(btn.data('hijri'));
+            $('#maktoob_date').val(btn.data('maktoobdate'));
+            $('#maktoob_number').val(btn.data('maktoobnumber'));
+            $('#invoice_number').val(btn.data('invoice'));
+            $('#airo_bill_number').val(btn.data('airo'));
+            $('#warada_way').val(btn.data('way'));
+            $('#tarofa').val(btn.data('tarofa'));
+            $('#type').val(btn.data('type'));
+            $('#quantity').val(btn.data('quantity'));
+            $('#fess').val(btn.data('fess'));
+
+            // Attachment
+            if (btn.data('attachment')) {
+                let fileHtml =
+                    `<a class="btn btn-sm btn-info" href="${btn.data('attachment')}" target="_blank">مشاهده فایل فعلی</a>`;
+                $('input[name=attachment]').next('.current-attachment').remove(); // remove previous if any
+                $('input[name=attachment]').after(`<div class="current-attachment mt-1">${fileHtml}</div>`);
+            } else {
+                $('input[name=attachment]').next('.current-attachment').remove();
+            }
+
+            // Serial numbers
+            const serialContainer = $('#serialNumbersContainer');
+            serialContainer.empty();
+            let serials = btn.data('serials');
+            if (typeof serials === "string") {
+                serials = JSON.parse(serials); // parse JSON string
+            }
+
+            // Add existing serials with delete button
+            if (serials.length > 0) {
+                serials.forEach((s, index) => {
+                    const div = $('<div class="mb-1 d-flex align-items-center"></div>');
+                    const input = $(
+                        `<input type="text" name="serial_numbers[]" class="form-control me-2" value="${s}" placeholder="شماره سریال ${index+1}">`
+                    );
+                    const delBtn = $(
+                        '<button type="button" class="btn btn-danger btn-sm delete_serial_button">حذف</button>'
+                    );
+
+                    delBtn.on('click', function() {
+                        div.remove();
+                    });
+
+                    div.append(input).append(delBtn);
+                    serialContainer.append(div);
+                });
+            }
+
+            $('input').prop('disabled', true);
+            $('select').prop('disabled', true);
+            $('#addSerialBtn').prop('disabled', true);
+            $('.delete_serial_button').prop('disabled', true);
+            // Show modal
+            $('.pop_up_modal').modal('show');
+        });
+
+        // ======================================================
+        //  delete button click
+        // ======================================================
+
+        $(document).on('click', '.delete_btn', function() {
+            Swal.fire({
+                title: "آیا از حذف این مورد اطمینان دارید؟",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                cancelButtonText: "نخیر",
+                confirmButtonText: "بلی",
+            }).then((result) => {
+                if (result.value == true) {
+                    $.get("{{ route('shekari-weapon-delete') }}/" + $(this).attr('data-id'), function(
+                        data) {
+                        if (data) {
+                            success_msg("موفقیت حذف گردید");
+                            $('.datatables-ajax').DataTable().ajax.reload();
+                        }
+                    }).fail(function(error) {
+                        error_msg("لطفا دوباره کوشش نمایید");
+                    });
+                }
+            });
+        });
+
+        // ======================================================
+        //  clear filters button click
+        // ======================================================
+        $(document).on('click', '.remove_search_btn', function() {
+
+            $('input').prop('disabled', false);
+            $('select').prop('disabled', false);
+            let route = $(this).data('route');
+            $('#' + 'search_organization_id').val('');
+            $('#' + 'search_serial_number').val('');
+            $('.datatables-ajax').DataTable().ajax.reload();
+        });
     </script>
 @endsection

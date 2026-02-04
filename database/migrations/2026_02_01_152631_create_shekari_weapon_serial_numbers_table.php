@@ -15,7 +15,7 @@ class CreateShekariWeaponSerialNumbersTable extends Migration
     {
         Schema::create('shekari_weapon_serial_numbers', function (Blueprint $table) {
             $table->id();
-            $table->integer('shekari_weapon_id');
+            $table->foreignId('shekari_weapon_id')->constrained('shekari_weapons')->cascadeOnDelete();   
             $table->string('serial_number');
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();

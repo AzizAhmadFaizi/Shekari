@@ -143,8 +143,7 @@ Route::middleware('auth')->group(function () {
         // shekari weapons
         Route::get('/shekari-weapons', [ShekariWeaponController::class, 'index'])->name('shekari-weapons');
         Route::post('/shekari-weapon-store', [ShekariWeaponController::class, 'store'])->name('shekari-weapon-store');
-        // Route::post('/organization-store', [OrganizationController::class, 'store'])->name('organization-store');
-        // Route::get('/shops', [OrganizationController::class, 'shops'])->name('shops');
+         Route::get('/shekari-weapon-delete/{id?}', [ShekariWeaponController::class, 'delete'])->name('shekari-weapon-delete');
     });
 
     Route::get('/show-weapon-to-print', [WeaponPrintController::class, 'index'])->name('show-weapon-to-print');
