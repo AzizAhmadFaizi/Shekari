@@ -12,15 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-
-use App\Models\Weapon;
-use App\Models\License;
-use App\Models\Vehicle;
-use App\Models\Contract;
-use App\Models\District;
-use App\Models\Employee;
-use App\Models\President;
-use App\Models\VicePresident;
+use Morilog\Jalali\Jalalian;
+use Illuminate\Support\Facades\Log;
 
 
 class ShekariWeaponController extends Controller
@@ -381,13 +374,93 @@ class ShekariWeaponController extends Controller
     }
 
    protected function delete($id)
-{
-    $shekari_weapon = ShekariWeapon::findOrFail($id);
-    // delete file if exists
-    if ($shekari_weapon->attachment && Storage::disk('shekari_weapon_files')->exists($shekari_weapon->attachment)) {
-        Storage::disk('shekari_weapon_files')->delete($shekari_weapon->attachment);
+    {
+        $shekari_weapon = ShekariWeapon::findOrFail($id);
+        // delete file if exists
+        if ($shekari_weapon->attachment && Storage::disk('shekari_weapon_files')->exists($shekari_weapon->attachment)) {
+            Storage::disk('shekari_weapon_files')->delete($shekari_weapon->attachment);
+        }
+        $shekari_weapon->delete();
+        return true;
     }
-    $shekari_weapon->delete();
-    return true;
-}
+
+      protected function report(Request $request)
+    {
+        $data['organizations'] = Organization::where('type', 1)
+        ->select('id', 'name_dr')
+        ->get();
+
+        $specialReportStartDate = null;
+        $specialReportEndDate = null;
+        $startDate = null;
+        $endDate = null;
+        $data['special_card_total_quantity'] = 0;
+        $data['special_card_total_revenue'] = 0;
+        $data['general_card_total_quantity'] = 0;
+        $data['general_card_total_revenue'] = 0;
+
+        $organization_id = $request->input('organization_id');
+        $specialReportStartRaw = trim($request->input('special_report_start_date'));
+        $specialReportEndRaw = trim($request->input('special_report_end_date'));
+
+        $startRaw = trim($request->input('start_date'));
+        $endRaw = trim($request->input('end_date'));
+
+
+
+        if (!empty($specialReportStartRaw)) {
+            try {
+                $specialReportStartDate = Jalalian::fromFormat('Y-m-d', $specialReportStartRaw)->toCarbon()->format('Y-m-d');
+            } catch (\Exception $e) {
+                return ['Invalid special report start date format: ' . $specialReportStartRaw];
+            }
+        }
+        if (!empty($specialReportEndRaw)) {
+            try {
+                $specialReportEndDate = Jalalian::fromFormat('Y-m-d', $specialReportEndRaw)->toCarbon()->format('Y-m-d');
+            } catch (\Exception $e) {
+                return ['Invalid special report end date format: ' . $specialReportEndRaw];
+            }
+        }
+        if (!empty($startRaw)) {
+            try {
+                $startDate = Jalalian::fromFormat('Y-m-d', $startRaw)->toCarbon()->format('Y-m-d');
+            } catch (\Exception $e) {
+                return ['Invalid start date format: ' . $startRaw];
+            }
+        }
+        if (!empty($endRaw)) {
+            try {
+                $endDate = Jalalian::fromFormat('Y-m-d', $endRaw)->toCarbon()->format('Y-m-d');
+            } catch (\Exception $e) {
+                return ['Invalid end date format: ' . $endRaw];
+            }
+        }
+
+        if($organization_id)
+        {
+            $data['special_card_total_quantity'] = ShekariWeapon::when($organization_id, fn($query) => $query->where('organization_id', $organization_id))
+                ->when($specialReportStartDate, fn($query) => $query->whereDate('created_at', '>=', $specialReportStartDate))
+                ->when($specialReportEndDate, fn($query) => $query->whereDate('created_at', '<=', $specialReportEndDate))
+                ->sum('quantity');
+
+            $data['special_card_total_revenue'] = ShekariWeapon::when($organization_id, fn($query) => $query->where('organization_id', $organization_id))
+                ->when($specialReportStartDate, fn($query) => $query->whereDate('created_at', '>=', $specialReportStartDate))
+                ->when($specialReportEndDate, fn($query) => $query->whereDate('created_at', '<=', $specialReportEndDate))
+                ->sum('revenue');
+
+         } else {
+            // dd($startDate,$endDate);
+            $data['general_card_total_quantity'] = ShekariWeapon::when($startDate, fn($query) => $query->whereDate('created_at', '>=', $startDate))
+                ->when($endDate, fn($query) => $query->whereDate('created_at', '<=', $endDate))
+                ->sum('quantity');
+
+            $data['general_card_total_revenue'] = ShekariWeapon::when($startDate, fn($query) => $query->whereDate('created_at', '>=', $startDate))
+                ->when($endDate, fn($query) => $query->whereDate('created_at', '<=', $endDate))
+                ->sum('revenue');
+         }
+
+        //  dd($data);
+        return view('shekari-weapon.report', $data);
+    }
 }

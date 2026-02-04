@@ -172,6 +172,14 @@
                                 شکاری</span></a>
                     </li>
                 @endif
+                @if (auth()->user()->role_id == 2 || auth()->user()->role_id == 4)
+                    <li
+                        class="nav-item {{ Route::currentRouteName() == 'shekari-weapon-report' ? 'active' : '' }} @if (Route::currentRouteName() == 'shekari-weapon-report') {{ Session::get('shekari-weapon-report') == 'shekari-weapon-report' ? 'active' : '' }} @endif">
+                        <a class="d-flex align-items-center"
+                            href="{{ Route::currentRouteName() != 'shekari-weapon-report' ? route('shekari-weapon-report') : 'javascript:void(0)' }}"><i
+                                data-feather="check-circle"></i><span class="menu-title text-truncate">گذارشات تفنګ های شکاری</span></a>
+                    </li>
+                @endif
                 {{-- @if (auth()->user()->role_id == 3 || auth()->user()->role_id == 2)
                     <li class="nav-item {{ Route::currentRouteName() == 'show-weapon-to-print' ? 'active' : '' }}"><a class="d-flex align-items-center" href="{{ Route::currentRouteName() != 'show-weapon-to-print' ? route('show-weapon-to-print') : 'javascript:void(0)' }}"><i class="fa fa-print"></i><span class="menu-title text-truncate">چاپ کارت ها</span></a>
                     </li>

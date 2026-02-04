@@ -135,8 +135,7 @@
                         </div>
                         <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">فیس</label>
-                            <input type="number" class="form-control" id="fess" name="fess"
-                                autocomplete="off" />
+                            <input type="number" class="form-control" id="fess" name="fess" value="1000" readonly autocomplete="off" />
                             <div class="invalid-feedback fess_error"></div>
                         </div>
                         <div class="row">
@@ -174,10 +173,19 @@
     {{-- end create modal --}}
 @endsection
 @section('scripts')
+    <script src="{{ asset('app-assets/vendors/js/forms/select/select2.full.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/vendors/css/forms/select/select2.min.css') }}">
     @include('organization.blockui')
     @include('organization.dari-datepicker')
-
     <script>
+        // ================================
+        //   select2 scripts
+        // ================================
+        $('.select2').select2({
+            dir: "rtl",
+            dropdownParent: $("#modals-slide-in"),
+        });
+
         // ================================
         //   show model
         // ================================
