@@ -14,4 +14,11 @@ class Organization extends Model
     {
         return $this->hasOne(User::class, 'id', 'created_by');
     }
+
+    public function licenses()
+    {
+        return $this->hasMany(License::class);
+    }
+
+
 }

@@ -14,4 +14,11 @@ class License extends Model
     {
         return $this->hasOne(LicenseType::class, 'id', 'license_type_id');
     }
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+
 }
