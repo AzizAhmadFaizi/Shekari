@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('inspire')->hourly();
 
         $schedule->call(function () {
             $today = Carbon::today()->format('Y-m-d');
@@ -30,8 +30,11 @@ class Kernel extends ConsoleKernel
             ->where('status', 1)
             ->update(['status' => 0]);
 
-        })->daily();
-        // })->everyMinute();
+             // Log the info
+        // \Log::info("Organization status update ran at " . now() . ". Total updated: {$updatedCount}");
+
+        // })->daily();
+        })->everyMinute();
 
     //================ command for schedule work ==============
     // php artisan schedule:work

@@ -332,6 +332,7 @@ class ShekariWeaponController extends Controller
             $shekari_weapon->revenue = $request->quantity * $request->fess;
             $shekari_weapon->attachment = $request->has('attachment') ? $attach : null;
             $shekari_weapon->created_by = auth()->id();
+            $shekari_weapon->updated_by = $request->shekari_weapon_id != 0 ? auth()->id() : null;
             $shekari_weapon->save();
 
         // =============================================================

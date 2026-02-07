@@ -57,7 +57,11 @@
     </div>
 
     {{-- create modal --}}
-    <div class="modal fade pop_up_modal" id="modals-slide-in" {{-- data-bs-backdrop="static" --}}>
+    <div class="
+    {{-- modal fade pop_up_modal --}}
+    modal modal-slide-in fade pop_up_modal
+    " id="modals-slide-in"
+        {{-- data-bs-backdrop="static" --}}>
         <div class="modal-dialog modal-lg">
             <form action="{{ route('shekari-weapon-store') }}" id="shekari_weapon_store_form" method="POST"
                 class="add-new-record modal-content pt-0">
@@ -65,6 +69,8 @@
                 <input type="hidden" class="form-control" name="shekari_weapon_id" id="shekari_weapon_id" />
                 <div class="modal-header mb-1">
                     <h3 class="modal-title" id="shekariWeaponModalLabel"></h3>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-dismiss="modal"><span
+                            class="fa fa-times"></span></button>
                 </div>
                 <div class="modal-body flex-grow-1">
                     <div class="row">
@@ -135,18 +141,20 @@
                         </div>
                         <div class="mb-1 col-sm-12 col-md-4">
                             <label class="mb-1">فیس</label>
-                            <input type="number" class="form-control" id="fess" name="fess" value="1000" readonly autocomplete="off" />
+                            <input type="number" class="form-control" id="fess" name="fess" value="1000"
+                                readonly autocomplete="off" />
                             <div class="invalid-feedback fess_error"></div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 col-sm-12">
-                                <div class="col-sm-12 d-flex mb-2">
+                            <div class="col-md-12 col-sm-12">
+                                <div class="col-sm-12 d-flex justify-content-between align-items-center mb-1">
                                     <button type="button" id="addSerialBtn" class="btn btn-success btn-sm">
                                         <span class="fa fa-plus"></span> اضافه شماره سریال
                                     </button>
                                 </div>
                                 <!-- Container for serial number inputs -->
-                                <div class="col-sm-12" id="serialNumbersContainer"></div>
+                                <div class="row" id="serialNumbersContainer"></div>
+
                             </div>
                         </div>
 
@@ -191,14 +199,33 @@
         // ================================
         $('.show_modal').click(function() {
             $('#shekariWeaponModalLabel').text('ثبت تفنگ شکاری');
+
+            // Reset form
             $('#shekari_weapon_store_form')[0].reset();
+
+            // Clear serials
             $('#serialNumbersContainer').empty();
+
+            // Enable all inputs/selects/buttons
             $('input').prop('disabled', false);
             $('select').prop('disabled', false);
             $('#addSerialBtn').prop('disabled', false);
             $('.delete_serial_button').prop('disabled', false);
+
+            // Clear file input manually
+            $('input[name="attachment"]').val('');
+            $('input[name="attachment"]').next('.current-attachment').remove();
+
+            // Reset Select2 fields if you are using Select2
+            $('select').each(function() {
+                $(this).val(null).trigger('change'); // clear value and update Select2 UI
+            });
+
+            // Show modal
             $('.pop_up_modal').modal('show');
         });
+
+
 
         // ======================================================
         //  handle dynamic serial number inputs based on quantity
@@ -221,17 +248,30 @@
         }
         // Add new serial input
         addBtn.addEventListener('click', function() {
-            const div = document.createElement('div');
-            div.classList.add('mb-1', 'd-flex', 'align-items-center');
 
-            // Input
+            const div = document.createElement('div');
+            // grid column
+            div.classList.add('col-md-3', 'col-sm-6', 'mb-2');
+
+            // count current inputs → for numbering
+            const index = serialContainer.querySelectorAll('.serial-item').length + 1;
+
+            // label
+            const label = document.createElement('label');
+            label.classList.add('form-label', 'fw-bold');
+            label.innerText = `شماره سریال ${index}`;
+
+            // row wrapper
+            const row = document.createElement('div');
+            row.classList.add('d-flex', 'align-items-center', 'serial-item');
+
+            // input
             const input = document.createElement('input');
             input.type = 'text';
-            input.name = 'serial_numbers[]'; // <-- array format
+            input.name = 'serial_numbers[]';
             input.classList.add('form-control', 'me-2');
-            input.placeholder = 'شماره سریال';
 
-            // Delete button
+            // delete button
             const delBtn = document.createElement('button');
             delBtn.type = 'button';
             delBtn.classList.add('btn', 'btn-danger', 'btn-sm');
@@ -239,13 +279,33 @@
 
             delBtn.addEventListener('click', function() {
                 div.remove();
+                updateLabels();
             });
 
-            // Append
-            div.appendChild(input);
-            div.appendChild(delBtn);
-            serialContainer.appendChild(div);
+            row.appendChild(input);
+            row.appendChild(delBtn);
+
+            div.appendChild(label);
+            div.appendChild(row);
+
+            serialContainer.prepend(div);
+
+            updateLabels();
         });
+
+
+        // auto renumber labels
+        function updateLabels() {
+            const items = serialContainer.querySelectorAll('.serial-item');
+            const total = items.length;
+
+            items.forEach((item, index) => {
+                const label = item.parentElement.querySelector('label');
+
+                // reverse numbering
+                label.innerHTML = `<b> شماره سریال ${total - index}</b>`;
+            });
+        }
 
 
         // ======================================================
@@ -423,21 +483,45 @@
 
             // Add existing serials with delete button
             if (serials.length > 0) {
+
+                const total = serials.length;
+
                 serials.forEach((s, index) => {
-                    const div = $('<div class="mb-1 d-flex align-items-center"></div>');
-                    const input = $(
-                        `<input type="text" name="serial_numbers[]" class="form-control me-2" value="${s}" placeholder="شماره سریال ${index+1}">`
+
+                    // column (4 per row)
+                    const div = $('<div class="col-md-3 col-sm-6 mb-2"></div>');
+
+                    const label = $(`<b> شماره سریال ${total - index}</b>`);
+
+                    // flex row (same as create)
+                    const row = $('<div class="d-flex align-items-center serial-item"></div>');
+
+                    const input = $(`
+            <input type="text"
+                   name="serial_numbers[]"
+                   class="form-control me-2"
+                   value="${s}">
+        `);
+
+                    const delBtn = $(
+                        '<button type="button" class="btn btn-danger btn-sm delete_serial_button">حذف</button>'
                     );
-                    const delBtn = $('<button type="button" class="btn btn-danger btn-sm">حذف</button>');
 
                     delBtn.on('click', function() {
                         div.remove();
+                        updateLabels();
                     });
 
-                    div.append(input).append(delBtn);
+                    row.append(input).append(delBtn);
+                    div.append(label).append(row);
+
+                    // Append (not prepend) for reverse order numbering
                     serialContainer.append(div);
                 });
             }
+
+
+
 
             // Show modal
             $('.pop_up_modal').modal('show');
@@ -485,24 +569,32 @@
             }
 
             // Add existing serials with delete button
-            if (serials.length > 0) {
-                serials.forEach((s, index) => {
-                    const div = $('<div class="mb-1 d-flex align-items-center"></div>');
-                    const input = $(
-                        `<input type="text" name="serial_numbers[]" class="form-control me-2" value="${s}" placeholder="شماره سریال ${index+1}">`
-                    );
-                    const delBtn = $(
-                        '<button type="button" class="btn btn-danger btn-sm delete_serial_button">حذف</button>'
-                    );
+            serials.slice().reverse().forEach((s, index) => {
+                const div = $('<div class="col-md-3 col-sm-6 mb-2"></div>');
 
-                    delBtn.on('click', function() {
-                        div.remove();
-                    });
+                const label = $(`
+        <label class="form-label fw-bold">شماره سریال ${index + 1}</label>
+    `);
 
-                    div.append(input).append(delBtn);
-                    serialContainer.append(div);
-                });
-            }
+                const row = $('<div class="d-flex align-items-center"></div>');
+
+                const input = $(`
+        <input type="text"
+               class="form-control me-2"
+               value="${s}"
+               disabled>
+    `);
+
+                const delBtn = $(
+                    '<button type="button" class="btn btn-danger btn-sm" disabled>حذف</button>');
+
+                row.append(input).append(delBtn);
+                div.append(label).append(row);
+
+                serialContainer.prepend(div);
+            });
+
+
 
             $('input').prop('disabled', true);
             $('select').prop('disabled', true);
